@@ -26,6 +26,21 @@ window.PrismiaTower = (option = {}) => {
   game.addLayer(constant.flightLayer)
   game.swapLayer(0, 1)
 
+  // Sponsor logos rendered inside each falling block
+  const logoPath = (file) => `./assets/logos/${file}`
+  game.addImg('logo_family_ventures', logoPath('family_ventures.jpeg'))
+  game.addImg('logo_m6', logoPath('m6.png'))
+  game.addImg('logo_webecode', logoPath('webecode.png'))
+  game.addImg('logo_dap', logoPath('dap.jpeg'))
+  game.addImg('logo_blush', logoPath('blush.jpeg'))
+  game.addImg('logo_cra_conseil', logoPath('cra_conseil.png'))
+  game.addImg('logo_daylindo', logoPath('daylindo.jpg'))
+  game.addImg('logo_koino', logoPath('koino.jpeg'))
+  game.addImg('logo_horizon', logoPath('horizon.png'))
+  game.addImg('logo_bc_jansens', logoPath('bc_jansens.png'))
+  game.addImg('logo_recma', logoPath('recma.jpg'))
+  game.addImg('logo_degauquier', logoPath('degauquier.jpeg'))
+
   game.setVariable(constant.blockWidth, game.width * 0.25)
   game.setVariable(constant.blockHeight, game.getVariable(constant.blockWidth) * 0.71)
   game.setVariable(constant.cloudSize, game.width * 0.3)

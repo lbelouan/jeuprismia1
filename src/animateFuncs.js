@@ -176,6 +176,12 @@ export const startAnimate = (engine) => {
       action: blockAction,
       painter: blockPainter
     })
+    const LOGO_KEYS = [
+      'logo_family_ventures', 'logo_m6', 'logo_webecode', 'logo_dap',
+      'logo_blush', 'logo_cra_conseil', 'logo_daylindo', 'logo_koino',
+      'logo_horizon', 'logo_bc_jansens', 'logo_recma', 'logo_degauquier'
+    ]
+    block.logoKey = LOGO_KEYS[Math.floor(Math.random() * LOGO_KEYS.length)]
     engine.addInstance(block)
   }
   const successCount = Number(engine.getVariable(constant.successCount, 0))

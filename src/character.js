@@ -5,16 +5,21 @@ const SPEECH_DURATION = 3200
 const SPEECH_FADE = 320
 
 const messages = [
-  "T'as prévu quoi pour ce soir ?",
-  'Tu fais quoi cette aprem ?',
-  'Qu’est-ce tu fais de beau ce soir ?',
-  'Ça dit quoi ?',
-  'Quoi de neuf ?',
-  'Tu deviens quoi toi ?',
-  'On se capte ce week-end ?',
-  'T’as des plans samedi ?',
-  'Café ?',
-  'T’as bien dormi ?'
+  "Tu savais que Family Ventures a reduit de 70% le temps post-reunion grace a Prismia ?",
+  "Tu savais que WebEcode a signe sa 1ere vente en 14 jours avec la prospection IA ?",
+  "Tu savais que Cafes Di-Costanzo genere ses devis en moins d’1h grace a l’IA ?",
+  "Tu savais que Car-Market analyse 30 000 annonces de voitures par jour avec l’IA ?",
+  "Tu savais que Blush Concept Store a reduit de 70% le temps de recherche produit ?",
+  "Tu savais que Prismia a aide RECMA a identifier +15% de croissance commerciale ?",
+  "Tu savais que DAP a accelere le traitement de ses dossiers assurance grace a un RAG ?",
+  "Tu savais que Daylindo est devenu autonome en lead generation en 8 semaines ?",
+  "Tu savais que Le Maitre Securite a multiplie par 10 sa vitesse de recherche produit ?",
+  "Tu savais que ALMA Group a eu sa roadmap IA en 14 jours avec Prismia ?",
+  "Tu savais que Mademoiselle Violette a identifie 21 automatisations pour ses evenements ?",
+  "Tu savais que SoftEdge Studio a booste sa prospection de +20% avec l’IA ?",
+  "Tu savais que Prismia libere ~180h/an pour les equipes support client ?",
+  "Tu savais que DENIS a identifie +21% de productivite bureau etudes grace a l’IA ?",
+  "Tu savais que Prismia a optimise 1000+ articles SEO 10x plus vite pour Vavril ?"
 ]
 
 const state = {

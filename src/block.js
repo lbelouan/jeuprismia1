@@ -221,7 +221,57 @@ const roundRectPath = (ctx, x, y, w, h, r) => {
   ctx.closePath()
 }
 
-const paintBlockBody = (ctx, x, y, w, h, perfect) => {
+const paintLogoCard = (ctx, engine, logoKey, x, y, w, h) => {
+  if (!logoKey || !engine) return
+  let img
+  try { img = engine.getImg(logoKey) } catch (e) { img = null }
+  if (!img || !img.complete || !img.naturalWidth) return
+
+  const padX = w * 0.12
+  const padY = h * 0.18
+  const cardX = x + padX
+  const cardY = y + padY
+  const cardW = w - padX * 2
+  const cardH = h - padY * 2
+  const cardR = Math.min(cardW, cardH) * 0.18
+
+  // White rounded card so any logo reads cleanly on the violet block
+  ctx.save()
+  roundRectPath(ctx, cardX, cardY, cardW, cardH, cardR)
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.96)'
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.25)'
+  ctx.shadowBlur = 6
+  ctx.shadowOffsetY = 1
+  ctx.fill()
+  ctx.restore()
+
+  // Logo with letter-box centering
+  const imgRatio = img.naturalWidth / img.naturalHeight
+  const innerPad = Math.min(cardW, cardH) * 0.12
+  const fitW = cardW - innerPad * 2
+  const fitH = cardH - innerPad * 2
+  const fitRatio = fitW / fitH
+  let drawW
+  let drawH
+  if (imgRatio > fitRatio) {
+    drawW = fitW
+    drawH = fitW / imgRatio
+  } else {
+    drawH = fitH
+    drawW = fitH * imgRatio
+  }
+  const drawX = cardX + (cardW - drawW) / 2
+  const drawY = cardY + (cardH - drawH) / 2
+
+  ctx.save()
+  // Clip to the rounded card so the image never spills out
+  roundRectPath(ctx, cardX, cardY, cardW, cardH, cardR)
+  ctx.clip()
+  ctx.drawImage(img, drawX, drawY, drawW, drawH)
+  ctx.restore()
+}
+
+const paintBlockBody = (ctx, x, y, w, h, perfect, engine, logoKey) => {
   const radius = Math.min(w, h) * 0.16
 
   // Outer glow
@@ -263,18 +313,8 @@ const paintBlockBody = (ctx, x, y, w, h, perfect) => {
   ctx.stroke()
   ctx.restore()
 
-  // "Skill row" accents — three thin lines suggesting modular floors
-  ctx.save()
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)'
-  ctx.lineWidth = 1
-  for (let i = 1; i <= 3; i += 1) {
-    const ly = y + (h * i) / 4
-    ctx.beginPath()
-    ctx.moveTo(x + w * 0.18, ly)
-    ctx.lineTo(x + w * 0.82, ly)
-    ctx.stroke()
-  }
-  ctx.restore()
+  // Logo card embedded inside the block (white background + image)
+  paintLogoCard(ctx, engine, logoKey, x, y, w, h)
 
   // Perfect tag — a small luminous dot
   if (perfect) {
@@ -310,14 +350,13 @@ const drawSwingBlock = (instance, engine) => {
   const { ctx } = engine
   const x = instance.weightX - instance.calWidth
   const blockTopY = instance.weightY + instance.height * 0.3
-  // small rope stub above the block to the hook position
   paintRopeStub(ctx, instance.weightX, instance.weightY, blockTopY)
-  paintBlockBody(ctx, x, blockTopY, instance.width, instance.height, instance.perfect)
+  paintBlockBody(ctx, x, blockTopY, instance.width, instance.height, instance.perfect, engine, instance.logoKey)
 }
 
 const drawBlock = (instance, engine) => {
   const { ctx } = engine
-  paintBlockBody(ctx, instance.x, instance.y, instance.width, instance.height, instance.perfect)
+  paintBlockBody(ctx, instance.x, instance.y, instance.width, instance.height, instance.perfect, engine, instance.logoKey)
 }
 
 const drawRotatedBlock = (instance, engine) => {
