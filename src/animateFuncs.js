@@ -6,6 +6,7 @@ import {
   getAngleBase
 } from './utils'
 import { addFlight } from './flight'
+import { paintCharacter } from './character'
 import * as constant from './constant'
 
 const roundRect = (ctx, x, y, w, h, r) => {
@@ -99,6 +100,10 @@ const drawLabelValue = (engine, opts) => {
 export const endAnimate = (engine) => {
   const gameStartNow = engine.getVariable(constant.gameStartNow)
   if (!gameStartNow) return
+
+  // Paint the character on top of blocks but under the HUD
+  paintCharacter(engine)
+
   const successCount = engine.getVariable(constant.successCount, 0)
   const failedCount = engine.getVariable(constant.failedCount)
   const gameScore = engine.getVariable(constant.gameScore, 0)

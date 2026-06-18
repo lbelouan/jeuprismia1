@@ -8,6 +8,7 @@ import {
   addScore
 } from './utils'
 import { playDrop, playPerfect, playRotate } from './sounds'
+import { triggerCharacterJump } from './character'
 import * as constant from './constant'
 
 const checkCollision = (block, line) => {
@@ -149,6 +150,7 @@ export const blockAction = (instance, engine, time) => {
             addScore(engine)
             playDrop()
           }
+          triggerCharacterJump(engine)
           break
         default:
           break
