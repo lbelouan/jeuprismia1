@@ -439,6 +439,48 @@
     100% { opacity: 1; transform: scale(1); }
   }
 
+  /* === Mobile responsive === */
+  @media (max-width: 520px) {
+    #canvas {
+      border-radius: 0;
+      box-shadow: none;
+    }
+    .landing {
+      padding: 5vh 5vw 5vh;
+    }
+    .landing-title {
+      font-size: clamp(30px, 8vw, 44px);
+    }
+    .landing-tagline {
+      font-size: 13px;
+    }
+    #start {
+      font-size: 15px;
+      padding: 14px 24px;
+    }
+    .modal-content {
+      padding: 28px 20px 22px;
+      border-radius: 18px;
+    }
+    .modal-heading {
+      font-size: 22px;
+    }
+    .over-score {
+      font-size: 52px;
+    }
+  }
+
+  @media (max-height: 620px) {
+    .landing-art {
+      display: none;
+    }
+    .landing {
+      justify-content: center;
+      gap: 24px;
+      padding: 4vh 6vw;
+    }
+  }
+
   /* Keep old slide animations referenced by JS */
   .slideTop {
     animation: slideTop 0.7s cubic-bezier(0.5, 0, 0.75, 0) forwards;
@@ -572,12 +614,15 @@
 <script>
   var domReady, loadFinish, canvasReady, loadError, gameStart, game, score, successCount, perfectStreak = 0, maxPerfect = 0;
 
-  // size lock: canvas keeps a portrait ratio
+  // On mobile fill the full screen; on desktop keep a portrait ratio
   var gameWidth = window.innerWidth;
   var gameHeight = window.innerHeight;
-  var ratio = 1.5;
-  if (gameHeight / gameWidth < ratio) {
-    gameWidth = Math.ceil(gameHeight / ratio);
+  var isMobile = gameWidth <= 520;
+  if (!isMobile) {
+    var ratio = 1.5;
+    if (gameHeight / gameWidth < ratio) {
+      gameWidth = Math.ceil(gameHeight / ratio);
+    }
   }
   $('.content').css({ "height": gameHeight + "px", "width": gameWidth + "px" });
   $('.js-modal-content').css({ "maxWidth": gameWidth + "px" });

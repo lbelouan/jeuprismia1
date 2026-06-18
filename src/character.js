@@ -1,25 +1,25 @@
 import * as constant from './constant'
 
 const JUMP_DURATION = 540
-const SPEECH_DURATION = 3200
-const SPEECH_FADE = 320
+const SPEECH_DURATION = 5500
+const SPEECH_FADE = 450
 
 const messages = [
-  "Tu savais que Family Ventures a reduit de 70% le temps post-reunion grace a Prismia ?",
-  "Tu savais que WebEcode a signe sa 1ere vente en 14 jours avec la prospection IA ?",
-  "Tu savais que Cafes Di-Costanzo genere ses devis en moins d’1h grace a l’IA ?",
-  "Tu savais que Car-Market analyse 30 000 annonces de voitures par jour avec l’IA ?",
-  "Tu savais que Blush Concept Store a reduit de 70% le temps de recherche produit ?",
-  "Tu savais que Prismia a aide RECMA a identifier +15% de croissance commerciale ?",
-  "Tu savais que DAP a accelere le traitement de ses dossiers assurance grace a un RAG ?",
-  "Tu savais que Daylindo est devenu autonome en lead generation en 8 semaines ?",
-  "Tu savais que Le Maitre Securite a multiplie par 10 sa vitesse de recherche produit ?",
-  "Tu savais que ALMA Group a eu sa roadmap IA en 14 jours avec Prismia ?",
-  "Tu savais que Mademoiselle Violette a identifie 21 automatisations pour ses evenements ?",
-  "Tu savais que SoftEdge Studio a booste sa prospection de +20% avec l’IA ?",
-  "Tu savais que Prismia libere ~180h/an pour les equipes support client ?",
-  "Tu savais que DENIS a identifie +21% de productivite bureau etudes grace a l’IA ?",
-  "Tu savais que Prismia a optimise 1000+ articles SEO 10x plus vite pour Vavril ?"
+  "Tu savais que Family Ventures gagne 70% de temps post-reunion ? Prismia genere le plan d'action apres chaque meeting automatiquement.",
+  "Tu savais que WebEcode a signe sa 1ere vente en 14 jours ? Prismia a mis en place une prospection IA ultra-ciblee, de la liste au message.",
+  "Tu savais que Cafes Di-Costanzo cree des devis en moins d'1h ? Les commerciaux n'attendent plus l'ADV : l'IA genere l'offre en mobilite.",
+  "Tu savais que Car-Market analyse 30 000 annonces/jour ? Avant Prismia, l'equipe n'en traitait que 2 000 manuellement.",
+  "Tu savais que Blush reduit de 70% le temps de recherche produit ? Un chatbot IA guide les clients vers la bonne piece en quelques secondes.",
+  "Tu savais que RECMA identifie +15% de croissance via l'IA ? Prismia a automatise la prospection et 7 taches internes en meme temps.",
+  "Tu savais que DAP traite ses dossiers assurance 2x plus vite ? L'IA retrouve le bon document en quelques secondes, sans chercher manuellement.",
+  "Tu savais que Daylindo est autonome en lead gen en 8 semaines ? Prismia a structure la methode, les outils et les premieres campagnes.",
+  "Tu savais que Le Maitre Securite cherche un produit en 30 sec ? Contre 5 min avant l'assistant IA Prismia, directement en rendez-vous.",
+  "Tu savais que ALMA Group a sa roadmap IA en 14 jours ? Prismia a priorise les projets pilotes par impact metier sur 2026.",
+  "Tu savais que Mademoiselle Violette a identifie 21 automatisations ? Pour tout l'administratif evenementiel, des inscriptions au reporting.",
+  "Tu savais que Prismia libere ~180h/an pour le support client ? L'IA redige les brouillons de reponse, l'equipe valide avant envoi.",
+  "Tu savais que DENIS identifie +21% de productivite ? 5 projets IA priorises pour supprimer les frictions du bureau d'etudes.",
+  "Tu savais que Vavril optimise 1000+ articles SEO 10x plus vite ? Prismia a industrialise le workflow avec l'IA, titre par titre.",
+  "Tu savais que SoftEdge Studio booste sa prospection de +20% ? L'IA personnalise les messages et automatise les relances sans spam."
 ]
 
 const state = {
@@ -63,61 +63,80 @@ const roundedRectPath = (ctx, x, y, w, h, r) => {
   ctx.closePath()
 }
 
+const wrapText = (ctx, text, maxWidth) => {
+  const words = text.split(' ')
+  const lines = []
+  let current = ''
+  for (const word of words) {
+    const test = current ? current + ' ' + word : word
+    if (ctx.measureText(test).width > maxWidth && current) {
+      lines.push(current)
+      current = word
+    } else {
+      current = test
+    }
+  }
+  if (current) lines.push(current)
+  return lines
+}
+
 const drawSpeechBubble = (ctx, anchorX, baseY, text, scale, alpha, canvasWidth) => {
   ctx.save()
   ctx.globalAlpha = alpha
-  const fontSize = Math.max(11, Math.floor(13 * scale))
-  ctx.font = `700 ${fontSize}px Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`
+  const fontSize = Math.max(12, Math.floor(14 * scale))
+  const lineH = Math.ceil(fontSize * 1.5)
+  ctx.font = `600 ${fontSize}px Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
-  const padX = 14 * scale
-  const padY = 8 * scale
-  const margin = 10 * scale
+  const padX = 18 * scale
+  const padY = 12 * scale
+  const margin = 8 * scale
+  const r = 12 * scale
 
-  const maxBubbleWidth = canvasWidth - margin * 2
-  const m = ctx.measureText(text)
-  const w = Math.min(maxBubbleWidth, m.width + padX * 2)
-  const h = fontSize + padY * 2
-  const r = 10 * scale
+  const maxBubbleW = Math.min(canvasWidth - margin * 2, canvasWidth * 0.9)
+  const maxTextW = maxBubbleW - padX * 2
+  const lines = wrapText(ctx, text, maxTextW)
 
-  // Center on anchorX, clamped to keep the bubble fully inside the canvas
+  const textW = lines.reduce((mx, l) => Math.max(mx, ctx.measureText(l).width), 0)
+  const w = Math.min(maxBubbleW, textW + padX * 2)
+  const h = lines.length * lineH + padY * 2
+
   const minX = margin
   const maxX = canvasWidth - margin - w
   const x = Math.max(minX, Math.min(maxX, anchorX - w / 2))
-  const y = baseY - h - 8 * scale
+  const y = baseY - h - 10 * scale
 
-  // Bubble body
-  ctx.shadowColor = 'rgba(168, 85, 247, 0.7)'
-  ctx.shadowBlur = 16
+  // Bubble body with glow
+  ctx.shadowColor = 'rgba(168, 85, 247, 0.75)'
+  ctx.shadowBlur = 24
   const grad = ctx.createLinearGradient(0, y, 0, y + h)
-  grad.addColorStop(0, '#d946ef')
-  grad.addColorStop(1, '#a855f7')
+  grad.addColorStop(0, '#e055f8')
+  grad.addColorStop(1, '#8b3cf7')
   ctx.fillStyle = grad
   roundedRectPath(ctx, x, y, w, h, r)
   ctx.fill()
 
-  // Tail — anchored under anchorX but clamped within the bubble
+  // Subtle border
   ctx.shadowBlur = 0
-  const tailMid = Math.max(x + r + 6 * scale, Math.min(x + w - r - 6 * scale, anchorX))
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)'
+  ctx.lineWidth = 1
+  ctx.stroke()
+
+  // Tail
+  const tailMid = Math.max(x + r + 7 * scale, Math.min(x + w - r - 7 * scale, anchorX))
   ctx.beginPath()
-  ctx.moveTo(tailMid - 6 * scale, y + h)
-  ctx.lineTo(tailMid, y + h + 8 * scale)
-  ctx.lineTo(tailMid + 6 * scale, y + h)
+  ctx.moveTo(tailMid - 7 * scale, y + h)
+  ctx.lineTo(tailMid, y + h + 10 * scale)
+  ctx.lineTo(tailMid + 7 * scale, y + h)
   ctx.closePath()
-  ctx.fillStyle = '#a855f7'
+  ctx.fillStyle = '#8b3cf7'
   ctx.fill()
 
-  // Text (truncate with ellipsis if it still overflows)
-  let display = text
-  if (m.width > w - padX * 2) {
-    let truncated = text
-    while (truncated.length > 1 && ctx.measureText(truncated + '…').width > w - padX * 2) {
-      truncated = truncated.slice(0, -1)
-    }
-    display = truncated + '…'
-  }
+  // Text lines
   ctx.fillStyle = '#fff'
-  ctx.fillText(display, x + w / 2, y + h / 2)
+  lines.forEach((line, i) => {
+    ctx.fillText(line, x + w / 2, y + padY + i * lineH + lineH / 2)
+  })
   ctx.restore()
 }
 
