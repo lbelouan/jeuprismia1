@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,minimal-ui">
+<title>Prismia Tower — Stack Your Skills</title>
+<link rel="icon" type="image/x-icon" href="./assets/favicon.png">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    height: 100%;
+    width: 100%;
+    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    background: #07060d;
+    color: #fff;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Auroral background shared by every screen */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 70% 50% at 20% 10%, rgba(168, 85, 247, 0.35), transparent 60%),
+      radial-gradient(ellipse 60% 50% at 80% 90%, rgba(217, 70, 239, 0.28), transparent 60%),
+      radial-gradient(ellipse 60% 60% at 50% 50%, rgba(126, 34, 206, 0.18), transparent 70%),
+      linear-gradient(180deg, #07060d 0%, #0a0712 50%, #050309 100%);
+    z-index: -2;
+  }
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 32px 32px;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, #000 30%, transparent 80%);
+    -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, #000 30%, transparent 80%);
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  img { display: block; max-width: 100%; }
+  a { text-decoration: none; color: inherit; }
+  ul, ol, li { list-style: none; }
+  .hide { display: none !important; }
+  button { font: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+
+  /* Centering wrapper kept by game engine */
+  .content {
+    height: 100vh;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  /* === Game canvas === */
+  #canvas {
+    position: fixed;
+    left: 0; top: 0; right: 0; bottom: 0;
+    margin: auto;
+    border-radius: 18px;
+    box-shadow:
+      0 0 0 1px rgba(168, 85, 247, 0.18) inset,
+      0 30px 80px -20px rgba(126, 34, 206, 0.5),
+      0 0 120px -20px rgba(217, 70, 239, 0.3);
+  }
+
+  /* === Loading screen === */
+  .loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  }
+  .loading .main {
+    width: min(420px, 80%);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 28px;
+  }
+  .loading-logo {
+    width: 88px;
+    height: 88px;
+    border-radius: 24px;
+    background:
+      linear-gradient(135deg, #a855f7 0%, #d946ef 50%, #7e14ff 100%);
+    display: grid;
+    place-items: center;
+    box-shadow:
+      0 0 40px rgba(168, 85, 247, 0.6),
+      inset 0 0 20px rgba(255, 255, 255, 0.15);
+    animation: floatY 3s ease-in-out infinite;
+  }
+  .loading-logo svg { width: 48px; height: 48px; }
+  .loading-title {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    background: linear-gradient(180deg, #ffffff 0%, #c4b5fd 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .loading-subtitle {
+    font-size: 13px;
+    color: rgba(255,255,255,0.55);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+  .loading .bar {
+    width: 100%;
+    height: 8px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.06);
+    overflow: hidden;
+    position: relative;
+    border: 1px solid rgba(168, 85, 247, 0.2);
+  }
+  .loading .bar .percent {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #7e14ff 0%, #a855f7 50%, #d946ef 100%);
+    border-radius: 999px;
+    box-shadow: 0 0 16px rgba(168, 85, 247, 0.7);
+    transition: width 0.2s ease-out;
+  }
+  .loading .title { /* updated by JS — keep selector for compatibility */
+    font-size: 14px;
+    color: rgba(255,255,255,0.7);
+    letter-spacing: 0.16em;
+    font-weight: 600;
+  }
+  .loading .text {
+    font-size: 12px;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  /* === Landing screen === */
+  .landing {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10vh 6vw 8vh;
+    z-index: 9;
+  }
+  .landing-top {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    animation: fadeUp 0.7s ease-out both;
+  }
+  .brand-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: rgba(168, 85, 247, 0.12);
+    border: 1px solid rgba(168, 85, 247, 0.35);
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #e9d5ff;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .brand-chip-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #d946ef;
+    box-shadow: 0 0 10px #d946ef;
+  }
+  .landing-title {
+    font-size: clamp(40px, 9vw, 64px);
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    background: linear-gradient(180deg, #ffffff 0%, #d8b4fe 50%, #a855f7 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 8px 40px rgba(168, 85, 247, 0.35);
+  }
+  .landing-title span {
+    display: block;
+    font-size: 0.58em;
+    font-weight: 700;
+    margin-top: 6px;
+    background: linear-gradient(90deg, #d946ef, #a855f7);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .landing-tagline {
+    font-size: 15px;
+    color: rgba(255,255,255,0.7);
+    max-width: 320px;
+    line-height: 1.5;
+    margin-top: 8px;
+  }
+
+  .landing-art {
+    flex: 1;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+  .landing-art svg {
+    width: min(70%, 280px);
+    height: auto;
+    filter: drop-shadow(0 20px 40px rgba(168, 85, 247, 0.45));
+    animation: floatY 4s ease-in-out infinite;
+  }
+
+  .landing-bottom {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    animation: fadeUp 0.9s 0.15s ease-out both;
+  }
+  #start {
+    position: relative;
+    width: min(280px, 80%);
+    padding: 16px 28px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #a855f7 0%, #d946ef 100%);
+    color: #fff;
+    font-weight: 800;
+    font-size: 17px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    box-shadow:
+      0 12px 30px -8px rgba(168, 85, 247, 0.7),
+      inset 0 1px 0 rgba(255,255,255,0.25);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    overflow: hidden;
+  }
+  #start::after {
+    content: "";
+    position: absolute;
+    inset: 1px;
+    border-radius: 15px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.18), transparent 50%);
+    pointer-events: none;
+  }
+  #start:hover { transform: translateY(-2px); box-shadow: 0 18px 40px -8px rgba(168, 85, 247, 0.85), inset 0 1px 0 rgba(255,255,255,0.3); }
+  #start:active { transform: translateY(0); }
+  .landing-hint {
+    font-size: 11px;
+    color: rgba(255,255,255,0.45);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+
+  /* === Modal === */
+  .modal {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
+  }
+  .modal .mask {
+    position: absolute;
+    inset: 0;
+    background: rgba(5, 3, 9, 0.78);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+  .modal-content {
+    position: relative;
+    width: min(380px, 88%);
+    padding: 36px 28px 28px;
+    border-radius: 24px;
+    background: linear-gradient(180deg, rgba(30, 18, 50, 0.95), rgba(15, 8, 28, 0.95));
+    border: 1px solid rgba(168, 85, 247, 0.3);
+    box-shadow:
+      0 30px 80px -20px rgba(126, 34, 206, 0.6),
+      0 0 0 1px rgba(255,255,255,0.05) inset;
+    text-align: center;
+    animation: popIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+  .modal-content::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 50%;
+    width: 70%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #d946ef, transparent);
+    transform: translateX(-50%);
+  }
+  .modal-eyebrow {
+    font-size: 11px;
+    color: #d8b4fe;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .modal-heading {
+    font-size: 26px;
+    font-weight: 800;
+    background: linear-gradient(180deg, #fff 0%, #c4b5fd 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin-bottom: 18px;
+  }
+  .over-score {
+    font-size: 64px;
+    font-weight: 900;
+    line-height: 1;
+    background: linear-gradient(135deg, #d946ef 0%, #a855f7 50%, #7c3aed 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 0 40px rgba(168, 85, 247, 0.4);
+    letter-spacing: -0.03em;
+  }
+  .over-score-label {
+    font-size: 12px;
+    color: rgba(255,255,255,0.5);
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+  .modal-stats {
+    display: flex;
+    gap: 10px;
+    margin: 22px 0 26px;
+  }
+  .stat {
+    flex: 1;
+    padding: 12px 8px;
+    border-radius: 12px;
+    background: rgba(168, 85, 247, 0.08);
+    border: 1px solid rgba(168, 85, 247, 0.18);
+  }
+  .stat-value {
+    font-size: 22px;
+    font-weight: 800;
+    color: #fff;
+  }
+  .stat-label {
+    font-size: 10px;
+    color: rgba(255,255,255,0.5);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+  .modal-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .btn-primary, .btn-ghost {
+    width: 100%;
+    padding: 14px 18px;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, #a855f7 0%, #d946ef 100%);
+    color: #fff;
+    box-shadow: 0 10px 24px -8px rgba(168, 85, 247, 0.6);
+  }
+  .btn-primary:hover { transform: translateY(-2px); }
+  .btn-ghost {
+    background: rgba(255,255,255,0.04);
+    color: #d8b4fe;
+    border: 1px solid rgba(168, 85, 247, 0.3);
+  }
+  .btn-ghost:hover { background: rgba(168, 85, 247, 0.12); }
+
+  /* === Animations === */
+  @keyframes floatY {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes popIn {
+    0% { opacity: 0; transform: scale(0.8); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+
+  /* Keep old slide animations referenced by JS */
+  .slideTop {
+    animation: slideTop 0.7s cubic-bezier(0.5, 0, 0.75, 0) forwards;
+  }
+  .slideBottom {
+    animation: slideBottom 0.7s cubic-bezier(0.5, 0, 0.75, 0) forwards;
+  }
+  @keyframes slideTop {
+    to { transform: translateY(-120%); opacity: 0; }
+  }
+  @keyframes slideBottom {
+    to { transform: translateY(120%); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+<canvas id="canvas" class="hide"></canvas>
+
+<div class="content">
+
+  <!-- Loading -->
+  <div class="loading">
+    <div class="main">
+      <div class="loading-logo">
+        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M24 4 L40 14 L40 34 L24 44 L8 34 L8 14 Z" stroke="white" stroke-width="2.2" stroke-linejoin="round" opacity="0.9"/>
+          <path d="M24 14 L32 19 L32 29 L24 34 L16 29 L16 19 Z" fill="white" opacity="0.92"/>
+        </svg>
+      </div>
+      <div>
+        <div class="loading-title">PRISMIA TOWER</div>
+        <div class="loading-subtitle">Stack your skills</div>
+      </div>
+      <div class="progress" style="width: 100%; display:flex; flex-direction: column; gap: 12px; align-items: center;">
+        <div class="bar"><div class="percent"></div></div>
+        <div class="title">0%</div>
+        <div class="text">Loading assets</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Landing -->
+  <div class="landing hide">
+    <div class="action-1 landing-top">
+      <div class="brand-chip"><span class="brand-chip-dot"></span> Prismia · Skill Tower</div>
+      <div class="landing-title">
+        Build Your<br/>Prismia<span>Stack your skills, floor by floor</span>
+      </div>
+    </div>
+
+    <div class="landing-art">
+      <svg viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="block1" x1="0" x2="1" y1="0" y2="1">
+            <stop offset="0%" stop-color="#d946ef"/>
+            <stop offset="100%" stop-color="#7c3aed"/>
+          </linearGradient>
+          <linearGradient id="block2" x1="0" x2="1" y1="0" y2="1">
+            <stop offset="0%" stop-color="#a855f7"/>
+            <stop offset="100%" stop-color="#6d28d9"/>
+          </linearGradient>
+          <linearGradient id="block3" x1="0" x2="1" y1="0" y2="1">
+            <stop offset="0%" stop-color="#ec4899"/>
+            <stop offset="100%" stop-color="#a855f7"/>
+          </linearGradient>
+        </defs>
+        <line x1="100" y1="0" x2="100" y2="60" stroke="white" stroke-width="1.5" opacity="0.5"/>
+        <polygon points="92,55 100,72 108,55" fill="white" opacity="0.85"/>
+        <rect x="62" y="170" width="76" height="44" rx="8" fill="url(#block1)" opacity="0.95"/>
+        <rect x="62" y="170" width="76" height="44" rx="8" fill="none" stroke="white" stroke-width="1" opacity="0.18"/>
+        <rect x="56" y="124" width="88" height="42" rx="8" fill="url(#block2)" opacity="0.9"/>
+        <rect x="56" y="124" width="88" height="42" rx="8" fill="none" stroke="white" stroke-width="1" opacity="0.18"/>
+        <rect x="68" y="80" width="64" height="40" rx="8" fill="url(#block3)" opacity="0.9"/>
+        <rect x="68" y="80" width="64" height="40" rx="8" fill="none" stroke="white" stroke-width="1" opacity="0.18"/>
+      </svg>
+    </div>
+
+    <div class="action-2 landing-bottom">
+      <button id="start">Start Climbing</button>
+      <div class="landing-hint">Tap to drop · Aim for Perfect</div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div id="modal" class="modal hide">
+    <div class="mask"></div>
+    <div class="js-modal-content modal-content">
+      <div id="over-modal" class="hide js-modal-card">
+        <div class="modal-eyebrow">Run Ended</div>
+        <div class="modal-heading">Tower toppled</div>
+        <div>
+          <div id="score" class="over-score">0</div>
+          <div class="over-score-label">Total score</div>
+        </div>
+        <div class="modal-stats">
+          <div class="stat">
+            <div class="stat-value" id="stat-floor">0</div>
+            <div class="stat-label">Floors</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value" id="stat-perfect">0</div>
+            <div class="stat-label">Perfect</div>
+          </div>
+        </div>
+        <div id="over-zero">
+          <div class="modal-actions">
+            <button class="btn-primary js-reload">Try Again</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="./dist/main.js"></script>
+<script src="./assets/zepto-1.1.6.min.js"></script>
+<script>
+  var domReady, loadFinish, canvasReady, loadError, gameStart, game, score, successCount, perfectStreak = 0, maxPerfect = 0;
+
+  // size lock: canvas keeps a portrait ratio
+  var gameWidth = window.innerWidth;
+  var gameHeight = window.innerHeight;
+  var ratio = 1.5;
+  if (gameHeight / gameWidth < ratio) {
+    gameWidth = Math.ceil(gameHeight / ratio);
+  }
+  $('.content').css({ "height": gameHeight + "px", "width": gameWidth + "px" });
+  $('.js-modal-content').css({ "maxWidth": gameWidth + "px" });
+
+  function hideLoading() {
+    if (domReady && canvasReady) {
+      $('#canvas').removeClass('hide');
+      loadFinish = true;
+      setTimeout(function () {
+        $('.loading').addClass('hide');
+        $('.landing').removeClass('hide');
+      }, 600);
+    }
+  }
+
+  function updateLoading(status) {
+    var success = status.success || 0;
+    var total = status.total || 0;
+    var failed = status.failed || 0;
+    if (failed > 0 && !loadError) {
+      loadError = true;
+      alert('Network error… Please reload.');
+      return;
+    }
+    var percent = total > 0 ? parseInt((success / total) * 100) : 100;
+    if (percent >= 100 && !canvasReady) {
+      canvasReady = true;
+      hideLoading();
+    }
+    var display = percent > 98 ? 98 : percent;
+    $('.loading .title').text(display + '%');
+    $('.loading .percent').css({ 'width': display + '%' });
+  }
+
+  function overShowOver() {
+    $('#stat-floor').text(successCount || 0);
+    $('#stat-perfect').text(maxPerfect || 0);
+    $('#modal').removeClass('hide');
+    $('#over-modal').removeClass('hide');
+    $('#over-zero').removeClass('hide');
+  }
+
+  // game customization options
+  var option = {
+    width: gameWidth,
+    height: gameHeight,
+    canvasId: 'canvas',
+    soundOn: true,
+    setGameScore: function (s) {
+      score = s;
+    },
+    setGameSuccess: function (s) {
+      successCount = s;
+    },
+    setGameFailed: function (f) {
+      $('#score').text(score || 0);
+      if (f >= 3) overShowOver();
+    }
+  };
+
+  function gameReady() {
+    game = PrismiaTower(option);
+    game.load(function () {
+      game.init();
+    }, updateLoading);
+    // No assets to preload: ease in the landing after a short delay
+    setTimeout(function () {
+      if (!canvasReady) {
+        canvasReady = true;
+        $('.loading .title').text('100%');
+        $('.loading .percent').css({ 'width': '100%' });
+        hideLoading();
+      }
+    }, 500);
+  }
+
+  var isWechat = navigator.userAgent.toLowerCase().indexOf("micromessenger") !== -1;
+  if (isWechat) {
+    document.addEventListener("WeixinJSBridgeReady", gameReady, false);
+  } else {
+    gameReady();
+  }
+
+  function indexHide() {
+    $('.landing .action-1').addClass('slideTop');
+    $('.landing .action-2').addClass('slideBottom');
+    setTimeout(function () { $('.landing').addClass('hide'); }, 650);
+  }
+
+  $('#start').on('click', function () {
+    if (gameStart) return;
+    gameStart = true;
+    setTimeout(function () { game.playBgm(); });
+    indexHide();
+    setTimeout(game.start, 400);
+  });
+
+  $('.js-reload').on('click', function () {
+    window.location.href = window.location.href.split('?')[0] + '?s=' + (+new Date());
+  });
+
+  window.addEventListener('load', function () {
+    domReady = true;
+    hideLoading();
+  }, false);
+</script>
+</body>
+</html>

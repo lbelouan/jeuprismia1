@@ -1,0 +1,24 @@
+{
+  "name": "prismia-tower",
+  "version": "0.1.0",
+  "description": "Prismia Tower — stack your skills, floor by floor.",
+  "private": true,
+  "main": "server.js",
+  "scripts": {
+    "start": "npm run build && node server.js",
+    "serve": "node server.js",
+    "build": "webpack --mode production --module-bind js=babel-loader",
+    "dev": "webpack --mode development --module-bind js=babel-loader --watch"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.0.0-beta.42",
+    "@babel/preset-env": "^7.0.0-beta.42",
+    "babel-loader": "^8.0.0-beta",
+    "express": "^4.16.3",
+    "webpack": "^4.0.1",
+    "webpack-cli": "^3.1.1"
+  },
+  "dependencies": {
+    "cooljs": "^1.0.2"
+  }
+}
