@@ -1,20 +1,20 @@
 import * as constant from './constant'
 
 const JUMP_DURATION = 540
-const SPEECH_DURATION = 2400
-const SPEECH_FADE = 280
+const SPEECH_DURATION = 3200
+const SPEECH_FADE = 320
 
 const messages = [
-  'Nice!',
-  'Awesome!',
-  'Keep going!',
-  'On fire!',
-  'Tower hero!',
-  'Sky-high!',
-  'Legendary!',
-  'Unstoppable!',
-  'Stacking it!',
-  'Boss move!'
+  "T'as prévu quoi pour ce soir ?",
+  'Tu fais quoi cette aprem ?',
+  'Qu’est-ce tu fais de beau ce soir ?',
+  'Ça dit quoi ?',
+  'Quoi de neuf ?',
+  'Tu deviens quoi toi ?',
+  'On se capte ce week-end ?',
+  'T’as des plans samedi ?',
+  'Café ?',
+  'T’as bien dormi ?'
 ]
 
 const state = {
@@ -58,22 +58,30 @@ const roundedRectPath = (ctx, x, y, w, h, r) => {
   ctx.closePath()
 }
 
-const drawSpeechBubble = (ctx, cx, baseY, text, scale, alpha) => {
+const drawSpeechBubble = (ctx, anchorX, baseY, text, scale, alpha, canvasWidth) => {
   ctx.save()
   ctx.globalAlpha = alpha
   const fontSize = Math.max(11, Math.floor(13 * scale))
-  ctx.font = `800 ${fontSize}px Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`
+  ctx.font = `700 ${fontSize}px Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
   const padX = 14 * scale
   const padY = 8 * scale
+  const margin = 10 * scale
+
+  const maxBubbleWidth = canvasWidth - margin * 2
   const m = ctx.measureText(text)
-  const w = m.width + padX * 2
+  const w = Math.min(maxBubbleWidth, m.width + padX * 2)
   const h = fontSize + padY * 2
   const r = 10 * scale
-  const x = cx - w / 2
+
+  // Center on anchorX, clamped to keep the bubble fully inside the canvas
+  const minX = margin
+  const maxX = canvasWidth - margin - w
+  const x = Math.max(minX, Math.min(maxX, anchorX - w / 2))
   const y = baseY - h - 8 * scale
 
+  // Bubble body
   ctx.shadowColor = 'rgba(168, 85, 247, 0.7)'
   ctx.shadowBlur = 16
   const grad = ctx.createLinearGradient(0, y, 0, y + h)
@@ -83,17 +91,28 @@ const drawSpeechBubble = (ctx, cx, baseY, text, scale, alpha) => {
   roundedRectPath(ctx, x, y, w, h, r)
   ctx.fill()
 
+  // Tail — anchored under anchorX but clamped within the bubble
   ctx.shadowBlur = 0
+  const tailMid = Math.max(x + r + 6 * scale, Math.min(x + w - r - 6 * scale, anchorX))
   ctx.beginPath()
-  ctx.moveTo(cx - 6 * scale, y + h)
-  ctx.lineTo(cx, y + h + 8 * scale)
-  ctx.lineTo(cx + 6 * scale, y + h)
+  ctx.moveTo(tailMid - 6 * scale, y + h)
+  ctx.lineTo(tailMid, y + h + 8 * scale)
+  ctx.lineTo(tailMid + 6 * scale, y + h)
   ctx.closePath()
   ctx.fillStyle = '#a855f7'
   ctx.fill()
 
+  // Text (truncate with ellipsis if it still overflows)
+  let display = text
+  if (m.width > w - padX * 2) {
+    let truncated = text
+    while (truncated.length > 1 && ctx.measureText(truncated + '…').width > w - padX * 2) {
+      truncated = truncated.slice(0, -1)
+    }
+    display = truncated + '…'
+  }
   ctx.fillStyle = '#fff'
-  ctx.fillText(text, cx, y + h / 2)
+  ctx.fillText(display, x + w / 2, y + h / 2)
   ctx.restore()
 }
 
@@ -251,7 +270,7 @@ export const paintCharacter = (engine) => {
       const torsoH = 13 * scale
       const headR = 8 * scale
       const headTop = footY - legH - torsoH - headR * 2
-      drawSpeechBubble(ctx, cx, headTop, state.speech, scale, Math.max(0, Math.min(1, alpha)))
+      drawSpeechBubble(ctx, cx, headTop, state.speech, scale, Math.max(0, Math.min(1, alpha)), engine.width)
     } else {
       state.speech = null
       state.speechStart = null
